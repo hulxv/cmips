@@ -1,0 +1,4 @@
+#ifndef CISCIFY_TEMPLATE_H
+#define CISCIFY_TEMPLATE_H
+
+#endif
