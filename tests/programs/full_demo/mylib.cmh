@@ -1,0 +1,8 @@
+# mylib.cmh: extra instructions for full_demo
+
+.inst max RR            # %0 = the larger of %0 and %1
+    slt   $t9, %0, %1
+    beqz  $t9, max_%u
+    move  %0, %1
+max_%u:
+.end_inst

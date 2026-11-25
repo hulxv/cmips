@@ -1,0 +1,95 @@
+# full_demo: uses almost every ciscify feature in one program.
+# Expected output: 14, 5, 13, 7, 9, 120, 5, hello (one per line)
+
+.include "mylib.cmh"
+
+.inst swap RR           # exchange two registers
+    move  $t9, %0
+    move  %0, %1
+    move  %1, $t9
+.end_inst
+
+        .data
+arr:    .word 3, 1, 4, 1, 5
+sum:    .word 0
+biggest: .word 0
+count:  .word 0
+msg:    .asciiz "hello"
+buf:    .space 16
+nl:     .asciiz "\n"
+
+        .text
+main:
+        # 1) sum the array: post-increment and loop
+        la      $s0, arr
+        li      $t1, 5
+        li      $t3, 0
+sum_lp: add     $t3, ($s0)+
+        loop    $t1, sum_lp
+        mov     sum, $t3
+        print_int $t3
+        print_str nl
+
+        # 2) largest element: scaled index, cmp and jumps
+        li      $t0, 0
+        mov     biggest, 0
+max_lp: mov     $t2, arr($t0*4)
+        cmp     $t2, biggest
+        jle     skip
+        mov     biggest, $t2
+skip:   inc     $t0
+        cmp     $t0, 5
+        jl      max_lp
+        mov     $t4, biggest
+        print_int $t4
+        print_str nl
+
+        # 3) arithmetic on memory: 10 + 5 - 3 + 1 = 13
+        mov     count, 10
+        add     count, 5
+        sub     count, 3
+        inc     count
+        mov     $t5, count
+        print_int $t5
+        print_str nl
+
+        # 4) user-defined instructions from mylib.cmh and this file
+        li      $t0, 3
+        li      $t1, 7
+        max     $t0, $t1
+        print_int $t0
+        print_str nl
+        li      $t2, 4
+        li      $t3, 9
+        swap    $t2, $t3
+        print_int $t2
+        print_str nl
+
+        # 5) stack and functions: recursive factorial of 5
+        li      $a0, 5
+        call    fact
+        move    $s1, $v0
+        print_int $s1
+        print_str nl
+
+        # 6) strings: helper routines
+        strlen  $s2, msg
+        print_int $s2
+        print_str nl
+        addiu   $s2, $s2, 1     # also copy the 0 byte
+        movs    buf, msg, $s2
+        print_str buf
+        print_str nl
+        exit
+
+# fact: $a0 = n, returns n! in $v0
+fact:   li      $v0, 1
+        cmp     $a0, 1
+        jle     fact_done
+        push    $a0
+        addiu   $a0, $a0, -1
+        call    fact
+        pop     $a0
+        mul     $v0, $v0, $a0
+fact_done:
+        ret
